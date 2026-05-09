@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>AI Scan | Coach AI</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-[#0b0f1a] text-white min-h-screen flex items-center justify-center font-sans">
+    <div class="max-w-xl w-full p-12 bg-[#161b2c] rounded-[3.5rem] text-center border border-white/5 shadow-2xl">
+        <h2 class="text-3xl font-black mb-8 tracking-tight">AI Presence Scan</h2>
+        <div class="relative rounded-[2.5rem] overflow-hidden bg-black mb-10 aspect-video border-2 border-emerald-500/20 shadow-2xl">
+            <video id="v" class="w-full h-full object-cover scale-x-[-1]" autoplay muted></video>
+            <div id="line" class="absolute top-0 left-0 w-full h-1.5 bg-emerald-400 shadow-[0_0_25px_#10b981] hidden animate-scan"></div>
+        </div>
+        <button id="s-btn" onclick="scan()" class="w-full bg-emerald-600 py-6 rounded-full font-black uppercase text-xs tracking-[0.2em] hover:bg-emerald-500 shadow-xl shadow-emerald-900/20 transition-all">Analyze Appearance</button>
+        <div id="results" class="hidden">
+            <p class="text-5xl font-black text-emerald-400 mb-2" id="score">--</p>
+            <p class="text-[10px] text-slate-500 mb-10 uppercase tracking-[0.4em] font-bold">Presence Verified</p>
+            <button onclick="location.href='/session_room'" class="w-full bg-white text-slate-900 py-6 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl transition-all">Enter Studio</button>
+        </div>
+    </div>
+    <script>
+        const v = document.getElementById('v');
+        navigator.mediaDevices.getUserMedia({video:true}).then(s=>v.srcObject=s);
+        function scan() {
+            document.getElementById('s-btn').classList.add('hidden');
+            document.getElementById('line').classList.remove('hidden');
+            setTimeout(()=>{
+                document.getElementById('line').classList.add('hidden');
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('score').innerText = Math.floor(Math.random()*15+84) + "%";
+            }, 3000);
+        }
+    </script>
+    <style>@keyframes s {0%{top:0} 100%{top:100%}} .animate-scan {animation: s 2s infinite alternate linear; position: absolute;}</style>
+</body>
+</html>

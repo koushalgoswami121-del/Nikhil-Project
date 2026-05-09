@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><title>Coach AI | Studio</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-[#0b0f1a] text-slate-100 min-h-screen flex flex-col font-sans">
+    
+    <nav class="bg-[#161b2c] px-10 py-6 flex justify-between items-center shadow-2xl border-b border-white/5">
+        <div class="flex items-center gap-6">
+            <div class="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-xl text-xs font-black">AI COACH</div>
+            <div id="timer" class="text-emerald-400 font-mono text-2xl font-bold">01:30</div>
+        </div>
+        <div class="flex items-center gap-8">
+            <span class="bg-slate-800 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest text-slate-300">
+                Quest {{ n }} / {{ t }}
+            </span>
+            <a href="/hub" class="text-xs font-black text-red-400 border border-red-400/30 px-6 py-3 rounded-xl hover:bg-red-400 hover:text-white transition-all uppercase tracking-widest">Exit to Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-8">
+        <div class="max-w-5xl w-full bg-[#161b2c] p-20 rounded-[4rem] shadow-2xl border border-white/5 relative">
+            <h1 class="text-4xl font-bold mb-16 leading-tight text-white">{{ q }}</h1>
+            
+            <form method="POST" id="interviewForm">
+                <div class="bg-[#0b0f1a] p-10 rounded-[2.5rem] border border-white/10 mb-12 shadow-inner">
+                    <div class="flex items-center justify-between mb-8">
+                        <button type="button" onclick="talk()" class="flex items-center gap-4 text-emerald-500 font-black uppercase text-xs tracking-widest">
+                            <span class="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center animate-pulse">🎤</span>
+                            Start Voice Input
+                        </button>
+                        <span id="mic-st" class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Ready</span>
+                    </div>
+                    <textarea id="box" name="ans" rows="4" class="w-full bg-transparent text-3xl outline-none resize-none placeholder:text-slate-800" placeholder="Transcription..." required></textarea>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <button type="submit" name="action" value="prev" class="px-10 py-5 rounded-full font-black uppercase text-xs tracking-widest border border-white/10 hover:bg-white/5 transition-all {% if n == 1 %}invisible{% endif %}">
+                        ← Back
+                    </button>
+                    
+                    <div class="flex gap-4">
+                        <button type="submit" name="action" value="submit" class="bg-slate-800 text-white px-10 py-5 rounded-full font-black uppercase text-xs tracking-widest hover:bg-slate-700 transition">
+                            Submit Answer
+                        </button>
+                        <button type="submit" name="action" value="next" class="bg-emerald-600 text-white px-14 py-5 rounded-full font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">
+                            {% if n == t %}Finish Assessment{% else %}Next Question →{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        let s = 90;
+        const timer = document.getElementById('timer');
+        const count = setInterval(() => {
+            s--;
+            let m = Math.floor(s/60), sec = s%60;
+            timer.innerText = `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            if(s<=0){ clearInterval(count); document.getElementById('interviewForm').submit(); }
+        }, 1000);
+
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.continuous = true; rec.interimResults = true;
+        let active = false;
+        function talk() {
+            if(!active){ rec.start(); document.getElementById('mic-st').innerText="Listening..."; active=true; }
+            else { rec.stop(); document.getElementById('mic-st').innerText="Paused"; active=false; }
+        }
+        rec.onresult = (e) => {
+            let t = ""; for (let i=e.resultIndex; i<e.results.length; i++) { t += e.results[i][0].transcript; }
+            document.getElementById('box').value = t;
+        };
+    </script>
+</body>
+</html>

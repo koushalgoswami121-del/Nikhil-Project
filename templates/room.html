@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coach AI | Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#121212] text-white font-mono flex flex-col min-h-screen">
+
+    <nav class="p-8 flex justify-between border-b border-white/10">
+        <div class="font-bold tracking-widest text-emerald-500">COACH_AI.v2</div>
+        <div class="text-white/30 italic">Session: {{ session['cat'] }}</div>
+    </nav>
+
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="max-w-2xl w-full">
+            <div class="mb-12">
+                <div class="text-emerald-500/50 mb-2">Question 0{{ num }} / 0{{ total }}</div>
+                <h1 class="text-3xl font-light leading-relaxed">{{ question }}</h1>
+            </div>
+
+            <form method="POST" class="space-y-8">
+                <textarea name="ans" rows="4" 
+                    class="w-full bg-transparent border-b border-white/20 py-4 outline-none focus:border-emerald-500 transition-colors text-xl placeholder:text-white/10" 
+                    placeholder="Start typing your response..." required autofocus></textarea>
+                
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-white/20 uppercase tracking-[0.4em]">Algorithm: TF-IDF Semantic Check</span>
+                    <button type="submit" class="group flex items-center gap-4 text-emerald-500 font-bold hover:text-white transition">
+                        SUBMIT <span class="group-hover:translate-x-2 transition-transform">→</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="p-8 text-[10px] text-white/10 flex justify-center gap-8">
+        <span>NO_CAMERA_MODE: ACTIVE</span>
+        <span>ENCRYPTION: AES_256</span>
+        <span>VIRTUAL_COACH: ONLINE</span>
+    </footer>
+
+</body>
+</html>

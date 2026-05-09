@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Hub | Coach AI</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-[#0b0f1a] text-slate-100 min-h-screen font-sans">
+    <nav class="bg-[#161b2c] px-10 py-5 flex justify-between items-center shadow-2xl border-b border-white/5">
+        <h1 class="text-emerald-500 text-xs font-black tracking-widest">COACH AI</h1>
+        <div class="flex items-center gap-6"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ session['name'] }}</span><a href="/logout" class="text-[10px] font-bold text-red-400 bg-red-400/10 px-4 py-2 rounded-xl uppercase">Logout</a></div>
+    </nav>
+    <main class="max-w-4xl mx-auto mt-20 p-6">
+        {% with ms = get_flashed_messages() %}{% if ms %}{% for m in ms %}
+        <div class="mb-10 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold rounded-2xl text-center uppercase tracking-widest">{{ m }}</div>
+        {% endfor %}{% endif %}{% endwith %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <form action="/start_interview" method="POST" class="space-y-4">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Expert Paths</h3>
+                {% for m in modes %}<button name="mode" value="{{ m }}" class="w-full p-6 bg-[#161b2c] border border-white/5 rounded-3xl text-left font-bold hover:border-emerald-500 transition-all flex justify-between">{{ m }} <span>→</span></button>{% endfor %}
+            </form>
+            <div class="bg-[#161b2c] p-10 rounded-[3rem] border border-white/5">
+                <h3 class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-6">Custom Role</h3>
+                <form action="/start_interview" method="POST" class="space-y-6">
+                    <input type="text" name="custom_role" placeholder="e.g. DevOps" class="w-full bg-[#0b0f1a] border border-white/10 p-5 rounded-2xl outline-none" required>
+                    <button type="submit" class="w-full bg-emerald-600 py-5 rounded-full font-black uppercase text-xs tracking-widest">Generate</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
