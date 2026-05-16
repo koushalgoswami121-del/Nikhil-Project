@@ -12,11 +12,18 @@
         <div id="results" class="hidden">
             <p class="text-5xl font-black text-emerald-400 mb-2" id="score">--</p>
             <p class="text-[10px] text-slate-500 mb-10 uppercase tracking-[0.4em] font-bold">Presence Verified</p>
-            <button onclick="location.href='/session_room'" class="w-full bg-white text-slate-900 py-6 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl transition-all">Enter Studio</button>
+            <button id="enter-btn" onclick="enterStudio()" class="w-full bg-white text-slate-900 py-6 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl transition-all">Enter Studio</button>
         </div>
     </div>
     <script>
         const v = document.getElementById('v');
+        const voiceMode = {{ 'true' if session.get('interview_type') == 'voice' else 'false' }};
+        function enterStudio() {
+            location.href = voiceMode ? '/voice_room' : '/session_room';
+        }
+        if (voiceMode) {
+            document.getElementById('enter-btn').textContent = 'Enter Live Voice Studio';
+        }
         navigator.mediaDevices.getUserMedia({video:true}).then(s=>v.srcObject=s);
         function scan() {
             document.getElementById('s-btn').classList.add('hidden');

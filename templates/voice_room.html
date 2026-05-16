@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Live Voice Chat | Coach AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #coach[data-state="speaking"] .coach-ring { animation: pulse-ring 1.2s ease-in-out infinite; border-color: rgb(52 211 153); }
+        #coach[data-state="listening"] .coach-ring { animation: pulse-ring 0.8s ease-in-out infinite; border-color: rgb(96 165 250); }
+        @keyframes pulse-ring { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.08); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-[#0b0f1a] text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <nav class="bg-[#161b2c] px-10 py-6 flex justify-between items-center shadow-2xl border-b border-white/5">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-500 text-slate-900 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Live Voice</span>
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">{{ mode }}</span>
+            </div>
+            <div id="timer" class="text-emerald-400 font-mono text-2xl font-bold">01:30</div>
+        </div>
+        <div class="flex items-center gap-8">
+            <span class="bg-slate-800 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest text-slate-300">
+                Quest {{ n }} / {{ t }}
+            </span>
+            <a href="/terminate" class="text-xs font-black text-red-400 border border-red-400/30 px-6 py-3 rounded-xl hover:bg-red-400 hover:text-white transition-all uppercase tracking-widest">End Session</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col lg:flex-row gap-8 p-8 max-w-6xl mx-auto w-full">
+        <section class="lg:w-2/5 flex flex-col items-center justify-center bg-[#161b2c] rounded-[3rem] p-10 border border-white/5 shadow-2xl">
+            <div id="coach" data-state="idle" class="relative mb-8">
+                <div class="coach-ring absolute inset-0 rounded-full border-4 border-emerald-500/30"></div>
+                <div class="relative w-40 h-40 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-900 flex items-center justify-center text-5xl shadow-2xl">
+                    🎙️
+                </div>
+            </div>
+            <p id="voice-status" class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">Initializing…</p>
+            {% if neural_voice_enabled %}
+            <p class="text-[10px] text-emerald-500/80 font-bold uppercase tracking-widest mb-4">Natural neural voice active</p>
+            {% else %}
+            <p class="text-[10px] text-amber-500/80 font-bold uppercase tracking-widest mb-4 max-w-xs text-center">Start app with start.bat to enable natural voice</p>
+            {% endif %}
+            <p class="text-center text-sm text-slate-400 leading-relaxed max-w-xs">
+                The AI coach reads each question aloud. Reply naturally — say <span class="text-emerald-400">"submit answer"</span> or use the buttons below.
+            </p>
+            <div class="flex gap-3 mt-8 w-full max-w-xs">
+                <button type="button" id="btn-repeat" class="flex-1 py-3 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition">Repeat</button>
+                <button type="button" id="btn-mic" class="flex-1 py-3 rounded-xl bg-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition">Mic On</button>
+            </div>
+        </section>
+
+        <section class="lg:flex-1 flex flex-col bg-[#161b2c] rounded-[3rem] p-10 border border-white/5 shadow-2xl">
+            <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4">Current question</p>
+            <h1 class="text-2xl lg:text-3xl font-bold leading-snug text-white mb-8">{{ q }}</h1>
+
+            <form method="POST" id="voiceForm" class="flex flex-col flex-1">
+                <div class="flex-1 bg-[#0b0f1a] rounded-[2rem] border border-white/10 p-6 mb-6">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Live transcript</p>
+                    <textarea id="transcript" name="ans" rows="6" class="w-full h-full min-h-[140px] bg-transparent text-xl outline-none resize-none placeholder:text-slate-700" placeholder="Your answer appears here as you speak…" required></textarea>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <button type="submit" name="action" value="prev" class="px-8 py-4 rounded-full font-black uppercase text-xs tracking-widest border border-white/10 hover:bg-white/5 transition {% if n == 1 %}invisible{% endif %}">← Back</button>
+                    <div class="flex gap-3 flex-wrap justify-end">
+                        <button type="submit" name="action" value="submit" data-voice-cmd="submit" class="bg-slate-800 text-white px-8 py-4 rounded-full font-black uppercase text-xs tracking-widest hover:bg-slate-700 transition">Submit</button>
+                        <button type="submit" name="action" value="next" data-voice-cmd="next" class="bg-emerald-600 text-white px-10 py-4 rounded-full font-black uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-500 transition">
+                            {% if n == t %}Finish{% else %}Next →{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/voice-chat.js') }}"></script>
+    <script>
+        const questionText = {{ q|tojson }};
+        const transcriptEl = document.getElementById('transcript');
+        const statusEl = document.getElementById('voice-status');
+        const coachEl = document.getElementById('coach');
+        const btnMic = document.getElementById('btn-mic');
+        const btnRepeat = document.getElementById('btn-repeat');
+        const form = document.getElementById('voiceForm');
+
+        const chat = new LiveVoiceChat({
+            questionText,
+            transcriptEl,
+            statusEl,
+            coachEl,
+            useGemini: {{ 'true' if neural_voice_enabled else 'false' }},
+            coachSpeakUrl: {{ url_for('coach_speak')|tojson }},
+        });
+
+        if (!chat.isSupported()) {
+            statusEl.textContent = 'Use Chrome or Edge for live voice';
+            statusEl.classList.add('text-amber-400');
+        } else {
+            chat.speakQuestion(function () {
+                chat.startLive();
+                btnMic.textContent = 'Mic Off';
+            });
+        }
+
+        btnMic.addEventListener('click', function () {
+            chat.toggleLive();
+            btnMic.textContent = chat.liveMode ? 'Mic Off' : 'Mic On';
+        });
+
+        btnRepeat.addEventListener('click', function () {
+            chat.stopLive();
+            btnMic.textContent = 'Mic On';
+            chat.speakQuestion(function () {
+                chat.startLive();
+                btnMic.textContent = 'Mic Off';
+            });
+        });
+
+        form.addEventListener('submit', function () {
+            chat.stopLive();
+            chat._stopAudio();
+        });
+
+        let s = 90;
+        const timer = document.getElementById('timer');
+        const count = setInterval(function () {
+            s--;
+            const m = Math.floor(s / 60), sec = s % 60;
+            timer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+            if (s <= 0) {
+                clearInterval(count);
+                chat.stopLive();
+                form.querySelector('[data-voice-cmd="next"]').click();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

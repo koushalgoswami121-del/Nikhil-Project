@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>Interview Mode | Coach AI</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-[#0b0f1a] text-slate-100 min-h-screen font-sans">
+    <nav class="bg-[#161b2c] px-10 py-5 flex justify-between items-center shadow-2xl border-b border-white/5">
+        <h1 class="text-emerald-500 text-xs font-black tracking-widest">COACH AI</h1>
+        <a href="{{ url_for('hub') }}" class="text-[10px] font-bold text-slate-400 hover:text-white uppercase tracking-widest">← Change role</a>
+    </nav>
+
+    <main class="max-w-3xl mx-auto mt-20 p-6">
+        <header class="text-center mb-14">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.35em] mb-3">Step 2 of 2</p>
+            <h2 class="text-3xl font-black text-white mb-3">How do you want to interview?</h2>
+            <p class="text-sm text-slate-400 mb-6">Role selected:</p>
+            <span class="inline-block bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-6 py-2 rounded-full text-sm font-bold">{{ role }}</span>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <form action="{{ url_for('start_interview') }}" method="POST" class="group">
+                <input type="hidden" name="interview_type" value="text">
+                <button type="submit" class="w-full h-full text-left p-10 bg-[#161b2c] border border-white/5 rounded-[2.5rem] hover:border-emerald-500 transition-all shadow-xl group-hover:shadow-emerald-900/20">
+                    <span class="text-4xl mb-6 block">📝</span>
+                    <h3 class="text-xl font-black text-white mb-3">Standard interview</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Read questions on screen, type or use voice-to-text for your answers.</p>
+                    <span class="inline-block mt-8 text-[10px] font-black uppercase tracking-widest text-emerald-500">Start standard →</span>
+                </button>
+            </form>
+
+            <form action="{{ url_for('start_interview') }}" method="POST" class="group">
+                <input type="hidden" name="interview_type" value="voice">
+                <button type="submit" class="w-full h-full text-left p-10 bg-gradient-to-br from-emerald-600/15 to-[#161b2c] border border-emerald-500/30 rounded-[2.5rem] hover:border-emerald-400 transition-all shadow-xl">
+                    <span class="text-4xl mb-6 block">🎙️</span>
+                    <h3 class="text-xl font-black text-white mb-3">Live voice interview</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">AI coach reads questions aloud. Speak your answers with live transcription. Best in Chrome or Edge.</p>
+                    <span class="inline-block mt-8 text-[10px] font-black uppercase tracking-widest text-emerald-400">Start live voice →</span>
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

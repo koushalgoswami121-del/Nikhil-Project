@@ -60,17 +60,37 @@
             if(s<=0){ clearInterval(count); document.getElementById('interviewForm').submit(); }
         }, 1000);
 
-        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.continuous = true; rec.interimResults = true;
-        let active = false;
-        function talk() {
-            if(!active){ rec.start(); document.getElementById('mic-st').innerText="Listening..."; active=true; }
-            else { rec.stop(); document.getElementById('mic-st').innerText="Paused"; active=false; }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = SpeechRecognition ? new SpeechRecognition() : null;
+        let active = false, finalText = "";
+        if (rec) {
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'en-US';
+            rec.onresult = (e) => {
+                let interim = "";
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    const bit = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) finalText = (finalText + " " + bit).trim();
+                    else interim += bit;
+                }
+                document.getElementById('box').value = (finalText + (interim ? " " + interim : "")).trim();
+            };
+            rec.onend = () => { if (active) { try { rec.start(); } catch (_) {} } };
         }
-        rec.onresult = (e) => {
-            let t = ""; for (let i=e.resultIndex; i<e.results.length; i++) { t += e.results[i][0].transcript; }
-            document.getElementById('box').value = t;
-        };
+        function talk() {
+            if (!rec) { document.getElementById('mic-st').innerText = "Use Chrome/Edge"; return; }
+            if (!active) {
+                finalText = document.getElementById('box').value.trim();
+                rec.start();
+                document.getElementById('mic-st').innerText = "Listening...";
+                active = true;
+            } else {
+                rec.stop();
+                document.getElementById('mic-st').innerText = "Paused";
+                active = false;
+            }
+        }
     </script>
 </body>
 </html>
