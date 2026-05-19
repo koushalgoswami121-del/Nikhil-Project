@@ -33,24 +33,43 @@ def last_error():
     return _LAST_ERROR
 
 
+def _install_edge_tts():
+    global _LAST_ERROR
+    import subprocess
+    import sys
+
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "edge-tts>=6.1", "-q"],
+            timeout=180,
+        )
+        import edge_tts  # noqa: F401
+        return True
+    except Exception as exc:
+        _LAST_ERROR = f"Could not install edge-tts: {exc}"
+        return False
+
+
 def neural_voice_available():
     try:
         import edge_tts  # noqa: F401
         return True
     except ImportError:
-        return False
+        return _install_edge_tts()
 
 
 def gemini_configured():
     return bool(_settings()["api_key"])
 
 
-def _coach_script(question_text, role=None):
-    role_bit = f" for a {role} interview" if role else ""
-    return (
-        f"Hello! I'm your interview coach{role_bit}. "
-        f"Here's your question: {question_text}"
-    )
+def _coach_script(question_text, role=None, is_first=True):
+    if is_first:
+        role_bit = f" for a {role} interview" if role else ""
+        return (
+            f"Hello! I'm your interview coach{role_bit}. "
+            f"Here's your question: {question_text}"
+        )
+    return f"So your next question is: {question_text}"
 
 
 def _pcm_to_wav(pcm_bytes, channels=1, rate=24000, sample_width=2):
@@ -118,11 +137,11 @@ def _edge_tts_mp3(text):
     return out.getvalue(), "audio/mpeg"
 
 
-def coach_speech(question_text, role=None):
+def coach_speech(question_text, role=None, is_first=True):
     """Return (audio_bytes, mime_type) or (None, None)."""
     global _LAST_ERROR
     _LAST_ERROR = ""
-    text = _coach_script(question_text, role)
+    text = _coach_script(question_text, role, is_first=is_first)
 
     data, mime = _try_gemini_tts(text)
     if data:

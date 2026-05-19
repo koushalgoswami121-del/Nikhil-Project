@@ -39,7 +39,7 @@
             {% if neural_voice_enabled %}
             <p class="text-[10px] text-emerald-500/80 font-bold uppercase tracking-widest mb-4">Natural neural voice active</p>
             {% else %}
-            <p class="text-[10px] text-amber-500/80 font-bold uppercase tracking-widest mb-4 max-w-xs text-center">Start app with start.bat to enable natural voice</p>
+            <p class="text-[10px] text-amber-500/80 font-bold uppercase tracking-widest mb-4 max-w-xs text-center">Natural voice loading… restart with start.bat if this stays</p>
             {% endif %}
             <p class="text-center text-sm text-slate-400 leading-relaxed max-w-xs">
                 The AI coach reads each question aloud. Reply naturally — say <span class="text-emerald-400">"submit answer"</span> or use the buttons below.
@@ -90,6 +90,7 @@
             coachEl,
             useGemini: {{ 'true' if neural_voice_enabled else 'false' }},
             coachSpeakUrl: {{ url_for('coach_speak')|tojson }},
+            isFirstQuestion: {{ 'true' if n == 1 else 'false' }},
         });
 
         if (!chat.isSupported()) {

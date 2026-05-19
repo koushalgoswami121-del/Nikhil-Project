@@ -14,6 +14,7 @@
         this.lang = options.lang || "en-US";
         this.useGemini = !!options.useGemini;
         this.coachSpeakUrl = options.coachSpeakUrl || "/api/coach-speak";
+        this.isFirstQuestion = options.isFirstQuestion !== false;
         this._audio = null;
         this.finalText = "";
         this.interimText = "";
@@ -121,13 +122,23 @@
         global.speechSynthesis.speak(utter);
     };
 
+    LiveVoiceChat.prototype._browserIntro = function (question) {
+        if (this.isFirstQuestion) {
+            return "Hello! I'm your interview coach. Here's your question: " + question;
+        }
+        return "So your next question is: " + question;
+    };
+
     LiveVoiceChat.prototype._speakGemini = function (question, onDone) {
         const self = this;
         self.setStatus("Generating natural voice…", "speaking");
         fetch(self.coachSpeakUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: question }),
+            body: JSON.stringify({
+                question: question,
+                is_first: self.isFirstQuestion,
+            }),
             credentials: "same-origin",
         })
             .then(function (res) {
@@ -152,10 +163,7 @@
                 };
                 self._audio.onerror = function () {
                     URL.revokeObjectURL(url);
-                    self._speakBrowser(
-                        "Here is your interview question. " + question,
-                        onDone
-                    );
+                    self._speakBrowser(self._browserIntro(question), onDone);
                 };
                 return self._audio.play();
             })
@@ -164,10 +172,7 @@
                     (err && err.message) ? String(err.message).slice(0, 60) : "Using browser voice…",
                     "error"
                 );
-                self._speakBrowser(
-                    "Here is your interview question. " + question,
-                    onDone
-                );
+                self._speakBrowser(self._browserIntro(question), onDone);
             });
     };
 
@@ -186,7 +191,7 @@
             this._speakGemini(q, onDone);
             return;
         }
-        this.speak("Here is your interview question. " + q, onDone);
+        this.speak(this._browserIntro(q), onDone);
     };
 
     LiveVoiceChat.prototype.startLive = function () {

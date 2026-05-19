@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 import random
+import sys
+
+from scoring import answer_similarity_score
 
 try:
     from dotenv import load_dotenv
@@ -12,6 +13,7 @@ except ImportError:
     pass
 
 import gemini_voice
+from question_bank import build_custom_role_questions
 
 gemini_voice._load_env()
 
@@ -55,9 +57,7 @@ def analyze_rubric(scores):
     return {"tone": "Professional", "pacing": "Steady", "content": "Competent"}
 
 def _score_answer(questions, step, answer):
-    v = TfidfVectorizer()
-    t = v.fit_transform([questions[step]['a'], answer or ''])
-    return round(float(cosine_similarity(t[0:1], t[1:2])[0][0]) * 100)
+    return answer_similarity_score(questions[step]['a'], answer or '')
 
 def _advance_session(questions, step, action, answer):
     hist = session.get('history', [0]*7)
@@ -110,7 +110,10 @@ def _ensure_role_bank(role):
     if not role:
         return None
     if role not in BANK:
-        BANK[role] = [{"q": f"Core skills for {role}?", "a": "Expertise."}] * 7
+        BANK[role] = build_custom_role_questions(role)
+    elif len(BANK[role]) == 7 and len({item["q"] for item in BANK[role]}) == 1:
+        # Replace legacy placeholder banks (7 identical questions)
+        BANK[role] = build_custom_role_questions(role)
     return role
 
 @app.route('/select_role', methods=['POST'])
@@ -203,7 +206,10 @@ def coach_speak():
     question = (data.get('question') or '').strip()
     if not question:
         return jsonify({'error': 'Missing question'}), 400
-    audio, mime = gemini_voice.coach_speech(question, role=session.get('mode'))
+    is_first = bool(data.get('is_first', True))
+    audio, mime = gemini_voice.coach_speech(
+        question, role=session.get('mode'), is_first=is_first
+    )
     if not audio:
         return jsonify({'error': gemini_voice.last_error() or 'TTS failed'}), 502
     return Response(audio, mimetype=mime or 'audio/mpeg')
@@ -231,4 +237,24 @@ def logout():
     return redirect(url_for('login'))
 
 with app.app_context(): db.create_all()
-if __name__ == '__main__': app.run(debug=True, port=8080)
+
+
+def _relaunch_in_venv():
+    """If .venv exists, re-run this app with venv Python (fixes voice + deps)."""
+    import os
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent
+    venv_py = root / ".venv" / "Scripts" / "python.exe"
+    if not venv_py.is_file():
+        return False
+    if Path(sys.executable).resolve() == venv_py.resolve():
+        return False
+    print("Switching to project virtual environment (.venv)...")
+    os.execv(str(venv_py), [str(venv_py), str(root / "app.py"), *sys.argv[1:]])
+
+
+if __name__ == '__main__':
+    _relaunch_in_venv()
+    gemini_voice.neural_voice_available()
+    app.run(debug=True, port=8080)

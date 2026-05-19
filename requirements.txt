@@ -1,7 +1,6 @@
 flask>=3.0
 flask-sqlalchemy>=3.1
 werkzeug>=3.0
-scikit-learn>=1.4
 python-dotenv>=1.0
 google-genai>=1.0
 edge-tts>=6.1
