@@ -173,7 +173,12 @@ def session_room():
 
     if request.method == 'POST':
         return _advance_session(questions, step, request.form.get('action'), request.form.get('ans', ''))
-    return render_template('session_room.html', q=questions[step]['q'], n=step+1, t=len(questions))
+    return render_template(
+        'question.html',
+        q={'text': questions[step]['q']},
+        progress=step + 1,
+        total=len(questions),
+    )
 
 @app.route('/voice_room', methods=['GET', 'POST'])
 def voice_room():
@@ -241,7 +246,7 @@ with app.app_context(): db.create_all()
 
 def _relaunch_in_venv():
     """If .venv exists, re-run this app with venv Python (fixes voice + deps)."""
-    import os
+    import subprocess
     from pathlib import Path
 
     root = Path(__file__).resolve().parent
@@ -251,7 +256,9 @@ def _relaunch_in_venv():
     if Path(sys.executable).resolve() == venv_py.resolve():
         return False
     print("Switching to project virtual environment (.venv)...")
-    os.execv(str(venv_py), [str(venv_py), str(root / "app.py"), *sys.argv[1:]])
+    # os.execv breaks when the project path contains spaces (common on Windows).
+    cmd = [str(venv_py), str(root / "app.py"), *sys.argv[1:]]
+    raise SystemExit(subprocess.call(cmd))
 
 
 if __name__ == '__main__':

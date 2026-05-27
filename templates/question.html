@@ -16,7 +16,7 @@
                 <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Session Progress</p>
                 <p class="text-sm font-bold text-indigo-900">{{ progress }} of {{ total }}</p>
             </div>
-            <a href="/dashboard" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition">Exit</a>
+            <a href="{{ url_for('hub') }}" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition">Exit</a>
         </div>
     </header>
 
@@ -30,13 +30,13 @@
 
             <form method="POST" class="space-y-8">
                 <div class="relative">
-                    <textarea name="answer" rows="5" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-lg text-slate-700 focus:border-indigo-400 focus:bg-white outline-none transition placeholder-slate-300 shadow-inner" placeholder="Explain this concept in your own words..." required></textarea>
+                    <textarea name="ans" rows="5" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-lg text-slate-700 focus:border-indigo-400 focus:bg-white outline-none transition placeholder-slate-300 shadow-inner" placeholder="Explain this concept in your own words..." required></textarea>
                 </div>
                 
                 <div class="flex items-center justify-between">
                     <p class="text-xs text-slate-400 font-medium italic">Coach AI will analyze your keywords for accuracy.</p>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-5 rounded-2xl font-black shadow-lg shadow-indigo-200 transition uppercase tracking-widest text-xs">
-                        Continue Session
+                    <button type="submit" name="action" value="next" class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-5 rounded-2xl font-black shadow-lg shadow-indigo-200 transition uppercase tracking-widest text-xs">
+                        {% if progress == total %}Finish Session{% else %}Continue Session{% endif %}
                     </button>
                 </div>
             </form>
